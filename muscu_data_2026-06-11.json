@@ -1,0 +1,55 @@
+{
+  "days": {
+    "2026-06-10": {
+      "choices": {
+        "A": 0
+      },
+      "exos": {
+        "PLANCHE · GAINAGE": {
+          "w": "",
+          "r": "",
+          "sets": [
+            false,
+            false,
+            false
+          ]
+        }
+      },
+      "done": false
+    },
+    "2026-06-11": {
+      "choices": {
+        "B": 0,
+        "A": 0
+      },
+      "exos": {
+        "HAUSSEMENTS": {
+          "w": "",
+          "r": "",
+          "sets": [],
+          "wm": "pdc+"
+        },
+        "ÉLÉV. LATÉRALES": {
+          "w": "",
+          "r": "",
+          "sets": [],
+          "rm": "reps"
+        }
+      },
+      "done": false,
+      "habits": {
+        "stretch": false,
+        "nofap": false
+      }
+    }
+  },
+  "prefs": {
+    "3-A": 0,
+    "4-B": 0,
+    "4-A": 0,
+    "bodyw": 65
+  },
+  "timer": {
+    "rest": 60
+  }
+}

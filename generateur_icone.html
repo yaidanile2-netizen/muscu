@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Générateur d'icône — muscu.ico</title>
+<style>
+  body { background:#05050f; color:#fff; font-family:system-ui,sans-serif; display:flex; flex-direction:column; align-items:center; gap:24px; padding:48px 16px; }
+  h1 { font-size:1.1rem; letter-spacing:2px; color:#00d4ff; }
+  #preview { display:flex; gap:16px; align-items:flex-end; }
+  canvas { border-radius:8px; }
+  button { background:rgba(0,212,255,.12); border:1.5px solid rgba(0,212,255,.5); color:#00d4ff; padding:14px 28px; border-radius:10px; font-size:.9rem; letter-spacing:2px; cursor:pointer; }
+  button:hover { background:rgba(0,212,255,.25); }
+  p { color:rgba(255,255,255,.45); font-size:.8rem; max-width:480px; text-align:center; line-height:1.6; }
+</style>
+</head>
+<body>
+<h1>💪 GÉNÉRATEUR D'ICÔNE — MUSCU.ICO</h1>
+<div id="preview"></div>
+<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+  <button onclick="buildIco()">⬇ MUSCU.ICO (BUREAU PC)</button>
+  <button onclick="buildAppleIcon()">⬇ APPLE-TOUCH-ICON.PNG (IPHONE)</button>
+</div>
+<p>Place <b>muscu.ico</b> et <b>apple-touch-icon.png</b> dans le même dossier que <b>Programme_Musculation.html</b>
+(et envoie-les aussi sur GitHub Pages avec le site).
+Pour un raccourci bureau PC : clic droit → Propriétés → Changer d'icône → muscu.ico.</p>
+<script>
+var SIZES = [16, 32, 48, 64, 128, 256];
+
+// Dessine l'icône : fond néon sombre arrondi + haltère lumineuse + éclair
+function drawIcon(size) {
+  var c = document.createElement('canvas');
+  c.width = c.height = size;
+  var x = c.getContext('2d');
+  var r = size * 0.22;
+
+  // Fond arrondi dégradé
+  x.beginPath();
+  x.moveTo(r, 0); x.arcTo(size, 0, size, size, r); x.arcTo(size, size, 0, size, r);
+  x.arcTo(0, size, 0, 0, r); x.arcTo(0, 0, size, 0, r); x.closePath();
+  var g = x.createLinearGradient(0, 0, size, size);
+  g.addColorStop(0, '#0a0a20'); g.addColorStop(1, '#03030c');
+  x.fillStyle = g; x.fill();
+  x.save(); x.clip();
+
+  // Lueurs d'ambiance
+  var orb = x.createRadialGradient(size*0.25, size*0.2, 0, size*0.25, size*0.2, size*0.7);
+  orb.addColorStop(0, 'rgba(0,212,255,0.25)'); orb.addColorStop(1, 'transparent');
+  x.fillStyle = orb; x.fillRect(0, 0, size, size);
+  var orb2 = x.createRadialGradient(size*0.8, size*0.85, 0, size*0.8, size*0.85, size*0.6);
+  orb2.addColorStop(0, 'rgba(191,0,255,0.22)'); orb2.addColorStop(1, 'transparent');
+  x.fillStyle = orb2; x.fillRect(0, 0, size, size);
+
+  // Haltère néon (diagonale)
+  var u = size / 100;
+  x.translate(size/2, size/2);
+  x.rotate(-Math.PI/5.5);
+  x.shadowColor = '#00d4ff';
+  x.shadowBlur = 8 * u;
+  // Barre
+  x.fillStyle = '#dce4f2';
+  x.fillRect(-26*u, -3.2*u, 52*u, 6.4*u);
+  // Plaques
+  x.fillStyle = '#00d4ff';
+  rRect(x, -34*u, -14*u, 8.5*u, 28*u, 3*u);
+  rRect(x, 25.5*u, -14*u, 8.5*u, 28*u, 3*u);
+  x.fillStyle = '#bf00ff';
+  rRect(x, -42*u, -9.5*u, 6*u, 19*u, 2.5*u);
+  rRect(x, 36*u, -9.5*u, 6*u, 19*u, 2.5*u);
+  x.setTransform(1, 0, 0, 1, 0, 0);
+
+  // Éclair
+  if (size >= 32) {
+    x.shadowColor = '#ffe600';
+    x.shadowBlur = 5 * u;
+    x.fillStyle = '#ffe600';
+    x.beginPath();
+    x.moveTo(70*u, 12*u); x.lineTo(58*u, 34*u); x.lineTo(67*u, 34*u);
+    x.lineTo(56*u, 54*u); x.lineTo(80*u, 28*u); x.lineTo(70*u, 28*u); x.lineTo(78*u, 12*u);
+    x.closePath(); x.fill();
+  }
+  x.restore();
+  return c;
+}
+function rRect(x, a, b, w, h, r) {
+  x.beginPath();
+  x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r);
+  x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); x.fill();
+}
+
+// Aperçu
+var canvases = {};
+SIZES.slice().reverse().forEach(function(s) {
+  if (s < 32) return;
+  var c = drawIcon(s);
+  c.style.width = c.style.height = Math.min(s, 128) + 'px';
+  document.getElementById('preview').appendChild(c);
+});
+
+// Assemble un vrai fichier .ico (entrées PNG, format Vista+)
+function buildIco() {
+  var pngs = [];
+  var done = 0;
+  SIZES.forEach(function(s, idx) {
+    drawIcon(s).toBlob(function(blob) {
+      blob.arrayBuffer().then(function(buf) {
+        pngs[idx] = buf;
+        if (++done === SIZES.length) assemble(pngs);
+      });
+    }, 'image/png');
+  });
+}
+// Icône iPhone : PNG 180×180 (Safari l'utilise pour « Ajouter à l'écran d'accueil »)
+function buildAppleIcon() {
+  drawIcon(180).toBlob(function(blob) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'apple-touch-icon.png';
+    a.click();
+    setTimeout(function() { URL.revokeObjectURL(a.href); }, 2000);
+  }, 'image/png');
+}
+function assemble(pngs) {
+  var headerSize = 6 + 16 * pngs.length;
+  var total = headerSize;
+  pngs.forEach(function(b) { total += b.byteLength; });
+  var out = new ArrayBuffer(total);
+  var dv = new DataView(out);
+  var u8 = new Uint8Array(out);
+  // En-tête ICO
+  dv.setUint16(0, 0, true);          // réservé
+  dv.setUint16(2, 1, true);          // type icône
+  dv.setUint16(4, pngs.length, true);
+  var offset = headerSize;
+  pngs.forEach(function(buf, i) {
+    var s = SIZES[i], e = 6 + i * 16;
+    dv.setUint8(e, s === 256 ? 0 : s);       // largeur (0 = 256)
+    dv.setUint8(e + 1, s === 256 ? 0 : s);   // hauteur
+    dv.setUint8(e + 2, 0);                   // palette
+    dv.setUint8(e + 3, 0);                   // réservé
+    dv.setUint16(e + 4, 1, true);            // plans
+    dv.setUint16(e + 6, 32, true);           // bits/pixel
+    dv.setUint32(e + 8, buf.byteLength, true);
+    dv.setUint32(e + 12, offset, true);
+    u8.set(new Uint8Array(buf), offset);
+    offset += buf.byteLength;
+  });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([out], { type: 'image/x-icon' }));
+  a.download = 'muscu.ico';
+  a.click();
+  setTimeout(function() { URL.revokeObjectURL(a.href); }, 2000);
+}
+</script>
+</body>
+</html>
