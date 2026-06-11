@@ -1009,38 +1009,81 @@ select.gi option { background: #0a0a18; }
   .nav-btn { padding: 8px 14px; }
   .today-day { font-size: 2.1rem; }
 }
-/* ── Full mobile (iPhone) ── */
+/* ── Full mobile (iPhone) — pensé pour ~390px ── */
 @media (max-width: 700px) {
-  /* Les slides de jours deviennent des pages scrollables 1 colonne */
+  /* Tab bar : icônes seules */
+  .nav-txt { display: none; }
+  .nav-label { display: none; }
+  .nav { gap: 5px; padding: 7px 10px calc(7px + env(safe-area-inset-bottom)); justify-content: space-around; }
+  .nav-btn { font-size: .95rem; padding: 9px 13px; letter-spacing: 0; border-radius: 10px; }
+
+  /* Aujourd'hui : header compact, actions sur 1 ligne scrollable */
+  .today-day { font-size: 1.6rem; letter-spacing: 2px; }
+  .today-date { font-size: .52rem; margin-top: 3px; }
+  .today-kicker { font-size: .52rem; }
+  .today-head { padding: calc(.7rem + env(safe-area-inset-top)) 1rem .55rem; gap: .5rem; }
+  .today-actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .today-actions::-webkit-scrollbar { display: none; }
+  .today-actions > * { flex-shrink: 0; }
+  .streak-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px 1rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .streak-row::-webkit-scrollbar { display: none; }
+  .streak-chip { flex-shrink: 0; padding: 6px 10px; font-size: .52rem; }
+  .today-go { padding: 10px 12px; font-size: .58rem; }
+
+  /* Jours : page scrollable 1 colonne, header collant */
   .day-slide { grid-template-rows: auto auto; overflow-y: auto; }
+  .day-header {
+    position: sticky; top: 0; z-index: 5;
+    background: rgba(3,3,10,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .day-badge { font-size: 1.7rem; }
+  .day-title { font-size: 1.15rem; }
   .ex-grid, .day-slide > div[style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
     overflow-y: visible !important;
     height: auto !important;
-    padding-bottom: 80px !important;
+    padding: 10px 1rem 90px !important;
   }
   .ex-card { min-height: 0; }
-  /* Inputs ≥16px = pas de zoom auto Safari */
+  .ex-illus { min-height: 200px; }
+  .ex-name { font-size: 1.35rem; }
+
+  /* Inputs ≥16px = pas de zoom auto Safari · touch targets larges */
   .gi, select.gi, .timer-box input { font-size: 16px; }
-  .set-chk { width: 42px; height: 42px; }
-  .tp-chip { padding: 11px 16px; font-size: .62rem; }
-  .nav-label { display: none; }
-  .nav { gap: 6px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); }
-  .nav-btn { font-size: .58rem; padding: 9px 10px; letter-spacing: 1px; }
-  .today-go { padding: 10px 12px; font-size: .58rem; }
-  .today-head { padding-top: calc(.9rem + env(safe-area-inset-top)); }
-  .streak-chip { padding: 6px 10px; font-size: .52rem; }
-  .stretch, #stretchBody { grid-template-columns: 1fr !important; }
-  .prog-menu { bottom: calc(60px + env(safe-area-inset-bottom)); max-height: 70vh; overflow-y: auto; }
-  .day-arrow { top: auto; bottom: calc(78px + env(safe-area-inset-bottom)); }
-  .title-logo { letter-spacing: 4px; }
+  .gi { width: 58px; }
+  .set-chk { width: 44px; height: 44px; }
+  .tp-chip { padding: 11px 14px; font-size: .6rem; }
+
+  #stretchBody { grid-template-columns: 1fr !important; }
+  .prog-menu { bottom: calc(56px + env(safe-area-inset-bottom)); max-height: 72vh; overflow-y: auto; }
+  .day-arrow { width: 36px; height: 36px; top: auto; bottom: calc(68px + env(safe-area-inset-bottom)); opacity: .85; }
+
+  /* Vue d'ensemble compacte */
+  .title-logo { font-size: 2.3rem !important; letter-spacing: 3px; }
+  .title-sub { font-size: .58rem; letter-spacing: 3px; }
+  .wk2-ic { font-size: 1.6rem; }
+  .wk2 { padding: 13px 12px 11px; }
 }
 @media (max-width: 560px) {
   .ex-grid { grid-template-columns: 1fr; }
   .dots { display: none; }
   .week-grid2 { grid-template-columns: 1fr 1fr; gap: 10px; }
 }
-@media (max-width: 400px) {
+@media (max-width: 340px) {
   .week-grid2 { grid-template-columns: 1fr; }
 }
 </style>
@@ -4311,13 +4354,13 @@ select.gi option { background: #0a0a18; }
 
 <!-- NAV -->
 <div class="nav">
-  <button class="nav-btn" onclick="goTo(0)">⚡ AUJOURD'HUI</button>
-  <button class="nav-btn" id="progBtn" onclick="toggleProgMenu()">📅 PROGRAMME</button>
-  <button class="nav-btn" id="timerBtn" onclick="toggleTimerPanel()">⏱ MINUTEUR</button>
+  <button class="nav-btn" onclick="goTo(0)">⚡<span class="nav-txt"> AUJOURD'HUI</span></button>
+  <button class="nav-btn" id="progBtn" onclick="toggleProgMenu()">📅<span class="nav-txt"> PROGRAMME</span></button>
+  <button class="nav-btn" id="timerBtn" onclick="toggleTimerPanel()">⏱<span class="nav-txt"> MINUTEUR</span></button>
   <button class="nav-btn" id="syncBtn" onclick="toggleSyncPanel()" title="Sync cloud">☁</button>
   <div class="dots" id="dots"></div>
   <span class="nav-label" id="navLabel">01 / 10 — AUJOURD'HUI</span>
-  <button class="nav-btn" onclick="goTo(9)">📊 RAPPORT</button>
+  <button class="nav-btn" onclick="goTo(9)">📊<span class="nav-txt"> RAPPORT</span></button>
 </div>
 
 <!-- Calendrier du programme (popup) -->
@@ -6031,13 +6074,6 @@ function renderToday() {
   var t = loadWorkoutData();
   var html = '';
 
-  // Colonne habitudes + eau + consistance (tous les jours)
-  html += habitsCardHTML(t, dow);
-  html += waterCardHTML(t);
-  html += stretchCardHTML(dow);
-  html += consistencyCardHTML();
-  if (dow === 6) html += cardioCardHTML(t);
-
   if (plan.rest === 'total') {
     html += '<div class="rest-hero" style="padding:1.5rem 1rem">' +
       '<div style="font-size:3.2rem">🛌</div>' +
@@ -6081,6 +6117,13 @@ function renderToday() {
       (t.completedAt ? new Date(t.completedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '') +
       ' — BIEN JOUÉ</div>';
   }
+
+  // Après la séance : cardio (samedi), habitudes, eau, étirements, consistance
+  if (dow === 6) html += cardioCardHTML(t);
+  html += habitsCardHTML(t, dow);
+  html += waterCardHTML(t);
+  html += stretchCardHTML(dow);
+  html += consistencyCardHTML();
 
   var body = document.getElementById('todayBody');
   body.innerHTML = html;
@@ -6487,7 +6530,7 @@ function refreshSyncPanel() {
     [['progMenu', 'progBtn', closeProgMenu], ['timerPanel', 'timerBtn', closeTimerPanel], ['syncPanel', 'syncBtn', closeSyncPanel]].forEach(function(cfg) {
       var m = document.getElementById(cfg[0]);
       if (!m.classList.contains('open')) return;
-      if (m.contains(ev.target) || ev.target.id === cfg[1]) return;
+      if (m.contains(ev.target) || (ev.target.closest && ev.target.closest('#' + cfg[1]))) return;
       cfg[2]();
     });
   });
