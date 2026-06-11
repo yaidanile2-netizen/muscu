@@ -1115,7 +1115,7 @@ select.gi option { background: #0a0a18; }
   <div class="today-slide">
     <div class="today-head">
       <div>
-        <div class="today-kicker">⚡ AUJOURD'HUI · v4-MOBILE</div>
+        <div class="today-kicker">⚡ AUJOURD'HUI · v5</div>
         <div class="today-day" id="todayDay">—</div>
         <div class="today-date" id="todayDate"></div>
       </div>
@@ -5278,10 +5278,12 @@ function getTodayKey(d) {
   return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
 }
 // Garantit l'existence de l'entrée du jour (+ migration habits)
+// Horodate la journée à chaque écriture → fusion cloud fiable par jour
 function ensureDay(s, key) {
   s.days = s.days || {};
   s.days[key] = s.days[key] || { choices: {}, exos: {}, done: false, habits: {} };
   if (!s.days[key].habits) s.days[key].habits = {};
+  s.days[key].ts = Date.now();
   return s.days[key];
 }
 function loadWorkoutData() {
@@ -6435,6 +6437,26 @@ function cloudPush() {
     setSyncStatus('☁ SYNCHRONISÉ · ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }), '#00ff88');
   }).catch(function() { setSyncStatus('⚠ ERREUR ENVOI — VÉRIFIE KEY/BIN', '#ff6b6b'); });
 }
+// Fusion de deux stores : jamais de perte.
+// Jours : le plus récent (ts) gagne, jour par jour. bodyLog/prefs : union.
+function mergeStores(a, b) {
+  var newer = (a.updatedAt || 0) >= (b.updatedAt || 0) ? a : b;
+  var older = newer === a ? b : a;
+  var out = JSON.parse(JSON.stringify(newer));
+  out.days = out.days || {};
+  var od = older.days || {};
+  Object.keys(od).forEach(function(k) {
+    if (!out.days[k] || (od[k].ts || 0) > (out.days[k].ts || 0)) out.days[k] = od[k];
+  });
+  out.bodyLog = out.bodyLog || {};
+  var ob = older.bodyLog || {};
+  Object.keys(ob).forEach(function(k) { if (!(k in out.bodyLog)) out.bodyLog[k] = ob[k]; });
+  out.prefs = out.prefs || {};
+  var op = older.prefs || {};
+  Object.keys(op).forEach(function(k) { if (!(k in out.prefs)) out.prefs[k] = op[k]; });
+  out.updatedAt = Math.max(a.updatedAt || 0, b.updatedAt || 0);
+  return out;
+}
 function cloudPull() {
   var c = syncCfg();
   if (!syncReady()) return;
@@ -6446,17 +6468,15 @@ function cloudPull() {
     return r.json();
   }).then(function(j) {
     var remote = j.record || {};
-    var local = loadStore();
-    if ((remote.updatedAt || 0) > (local.updatedAt || 0)) {
-      // Écriture directe (sans saveStore) pour ne pas re-pousser ce qu'on vient de recevoir
-      _storeCache = remote;
-      localStorage.setItem(STORE_KEY, JSON.stringify(remote));
-      renderToday();
-      renderRapport();
-      setSyncStatus('☁ DONNÉES RÉCUPÉRÉES DU CLOUD', '#00ff88');
-    } else {
-      setSyncStatus('☁ DÉJÀ À JOUR', '#00ff88');
-    }
+    var merged = mergeStores(loadStore(), remote);
+    // Écriture directe puis push de la fusion (débauncé)
+    _storeCache = merged;
+    localStorage.setItem(STORE_KEY, JSON.stringify(merged));
+    renderToday();
+    renderRapport();
+    setSyncStatus('☁ SYNCHRONISÉ (FUSION) · ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }), '#00ff88');
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(cloudPush, 1500);
   }).catch(function() { setSyncStatus('⚠ HORS-LIGNE OU IDENTIFIANTS INVALIDES', '#ff6b6b'); });
 }
 function cloudCreate() {
@@ -6575,7 +6595,11 @@ function refreshSyncPanel() {
   renderRapport();
   renderStretchLib();
   injectIllustrations();
-  cloudPull(); // récupère les données les plus récentes au lancement
+  cloudPull(); // fusionne avec le cloud au lancement
+  // Re-sync quand on revient sur l'app (iPhone : retour depuis l'écran d'accueil)
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') cloudPull();
+  });
 })();
 </script>
 </body>
